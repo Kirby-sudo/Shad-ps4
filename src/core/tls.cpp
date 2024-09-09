@@ -40,7 +40,7 @@ Tcb* GetTcbBase() {
     return reinterpret_cast<Tcb*>(TlsGetValue(GetTcbKey()));
 }
 
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) && defined(__x86_64__)
 
 // Reserve space in the 32-bit address range for allocating TCB pages.
 asm(".zerofill TCB_SPACE,TCB_SPACE,__guest_system,0x3FC000");
@@ -130,6 +130,17 @@ Tcb* GetTcbBase() {
     Tcb* tcb;
     asm volatile("mov %%fs:0x0, %0" : "=r"(tcb));
     return tcb;
+}
+
+#elif defined(__APPLE__) && defined(__aarch64__)
+
+void SetTcbBase(void* image_address) {
+    LOG_INFO(Core_Linker, "TODO: SetTcbBase");
+}
+
+Tcb* GetTcbBase() {
+    LOG_INFO(Core_Linker, "TODO: GetTcbBase");
+    return 0;
 }
 
 #else

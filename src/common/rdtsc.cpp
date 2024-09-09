@@ -38,7 +38,8 @@ static u64 GetTimeNs() {
 #endif
 }
 
-u64 EstimateRDTSCFrequency() {
+u64 EstimateRDTSCFrequency() 
+{
     // Discard the first result measuring the rdtsc.
     FencedRDTSC();
     std::this_thread::sleep_for(std::chrono::milliseconds{1});
