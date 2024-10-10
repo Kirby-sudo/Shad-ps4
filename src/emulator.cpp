@@ -212,6 +212,9 @@ void Emulator::Run(const std::filesystem::path& file) {
     }
     VideoCore::SetOutputDir(mount_captures_dir, id);
 
+    const auto& sys_module_path = Common::FS::GetUserPath(Common::FS::PathType::SysModuleDir);
+    mnt->Mount(sys_module_path, "/system/common/lib");
+
     // Initialize kernel and library facilities.
     Libraries::Kernel::init_pthreads();
     Libraries::InitHLELibs(&linker->GetHLESymbols());
@@ -257,32 +260,38 @@ void Emulator::Run(const std::filesystem::path& file) {
 
 void Emulator::LoadSystemModules(const std::filesystem::path& file) {
     constexpr std::array<SysModules, 13> ModulesToLoad{
-        {{"libSceNgs2.sprx", &Libraries::Ngs2::RegisterlibSceNgs2},
-         {"libSceFiber.sprx", nullptr},
-         {"libSceUlt.sprx", nullptr},
-         {"libSceJson.sprx", nullptr},
-         {"libSceJson2.sprx", nullptr},
-         {"libSceLibcInternal.sprx", &Libraries::LibcInternal::RegisterlibSceLibcInternal},
-         {"libSceDiscMap.sprx", &Libraries::DiscMap::RegisterlibSceDiscMap},
-         {"libSceRtc.sprx", &Libraries::Rtc::RegisterlibSceRtc},
-         {"libSceJpegEnc.sprx", nullptr},
-         {"libSceFont.sprx", nullptr},
-         {"libSceRazorCpu.sprx", nullptr},
-         {"libSceCesCs.sprx", nullptr},
-         {"libSceRudp.sprx", nullptr}}};
+        {{"libSceNgs2.sprx", &Libraries::Ngs2::RegisterlibSceNgs2, false},
+         {"libSceFiber.sprx", nullptr, false},
+         {"libSceUlt.sprx", nullptr, false},
+         {"libSceJson.sprx", nullptr, false},
+         {"libSceJson2.sprx", nullptr, false},
+         {"libSceLibcInternal.sprx", &Libraries::LibcInternal::RegisterlibSceLibcInternal, true},
+         {"libSceDiscMap.sprx", &Libraries::DiscMap::RegisterlibSceDiscMap, false},
+         {"libSceRtc.sprx", &Libraries::Rtc::RegisterlibSceRtc, true},
+         {"libSceJpegEnc.sprx", nullptr, false},
+         {"libSceFont.sprx", nullptr, false},
+         {"libSceRazorCpu.sprx", nullptr, true},
+         {"libSceCesCs.sprx", nullptr, true},
+         {"libSceRudp.sprx", nullptr, false}}};
 
     std::vector<std::filesystem::path> found_modules;
     const auto& sys_module_path = Common::FS::GetUserPath(Common::FS::PathType::SysModuleDir);
     for (const auto& entry : std::filesystem::directory_iterator(sys_module_path)) {
         found_modules.push_back(entry.path());
     }
-    for (const auto& [module_name, init_func] : ModulesToLoad) {
+    for (const auto& [module_name, init_func, load_at_startup] : ModulesToLoad) {
         const auto it = std::ranges::find_if(
             found_modules, [&](const auto& path) { return path.filename() == module_name; });
         if (it != found_modules.end()) {
             LOG_INFO(Loader, "Loading {}", it->string());
-            linker->LoadModule(*it);
-            continue;
+            if (load_at_startup) {
+                int result = linker->LoadModule(*it);
+                if (result >= 0) {
+                    continue;
+                }
+            } else {
+                continue;
+            }
         }
         if (init_func) {
             LOG_INFO(Loader, "Can't Load {} switching to HLE", module_name);

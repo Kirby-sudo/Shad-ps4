@@ -6,6 +6,7 @@
 #include <magic_enum.hpp>
 
 #include "common/logging/log.h"
+#include "core/libraries//kernel/libkernel.h"
 #include "core/libraries/error_codes.h"
 #include "core/libraries/libs.h"
 #include "core/libraries/system/sysmodule.h"
@@ -45,6 +46,50 @@ int PS4_SYSV_ABI sceSysmoduleIsLoadedInternal() {
 int PS4_SYSV_ABI sceSysmoduleLoadModule(OrbisSysModule id) {
     auto color_name = magic_enum::enum_name(id);
     LOG_ERROR(Lib_SysModule, "(DUMMY) called module = {}", magic_enum::enum_name(id));
+    switch (id) {
+    case OrbisSysModule::ORBIS_SYSMODULE_NGS2:
+        Libraries::Kernel::sceKernelLoadStartModule("/system/common/lib/libSceNgs2.sprx", 0, NULL,
+                                                    0, NULL, NULL);
+        break;
+        ;
+    case OrbisSysModule::ORBIS_SYSMODULE_ULT:
+        Libraries::Kernel::sceKernelLoadStartModule("/system/common/lib/libSceUlt.sprx", 0, NULL, 0,
+                                                    NULL, NULL);
+        break;
+    case OrbisSysModule::ORBIS_SYSMODULE_FIBER:
+        Libraries::Kernel::sceKernelLoadStartModule("/system/common/lib/libSceFiber.sprx", 0, NULL,
+                                                    0, NULL, NULL);
+        break;
+    case OrbisSysModule::ORBIS_SYSMODULE_JSON:
+        Libraries::Kernel::sceKernelLoadStartModule("/system/common/lib/libSceJson.sprx", 0, NULL,
+                                                    0, NULL, NULL);
+        break;
+    case OrbisSysModule::ORBIS_SYSMODULE_JSON2:
+        Libraries::Kernel::sceKernelLoadStartModule("/system/common/lib/libSceJson2.sprx", 0, NULL,
+                                                    0, NULL, NULL);
+        break;
+    case OrbisSysModule::ORBIS_SYSMODULE_FONT:
+        Libraries::Kernel::sceKernelLoadStartModule("/system/common/lib/libSceFont.sprx", 0, NULL,
+                                                    0, NULL, NULL);
+        break;
+    case OrbisSysModule::ORBIS_SYSMODULE_JPEG_ENC:
+        Libraries::Kernel::sceKernelLoadStartModule("/system/common/lib/libSceJpegEnc.sprx", 0,
+                                                    NULL, 0, NULL, NULL);
+        break;
+    case OrbisSysModule::ORBIS_SYSMODULE_DISC_MAP:
+        Libraries::Kernel::sceKernelLoadStartModule("/system/common/lib/libSceDiscMap.sprx", 0,
+                                                    NULL, 0, NULL, NULL);
+        break;
+    /* case OrbisSysModule::ORBIS_SYSMODULE_FONT_FT:
+        Libraries::Kernel::sceKernelLoadStartModule("/system/common/lib/libSceFontFt.sprx", 0,
+                                                    NULL, 0, NULL, NULL);
+        break;*/
+    case OrbisSysModule::ORBIS_SYSMODULE_FREETYPE_OT:
+        Libraries::Kernel::sceKernelLoadStartModule("/system/common/lib/libSceFreeTypeOt.sprx", 0,
+                                                    NULL, 0, NULL, NULL);
+        break;
+    }
+
     return ORBIS_OK;
 }
 
