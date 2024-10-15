@@ -9,11 +9,11 @@
 #include "common/logging/log.h"
 #ifdef ENABLE_QT_GUI
 #include <QtCore>
-#include "common/memory_patcher.h"
 #endif
 #include "common/assert.h"
 #include "common/discord_rpc_handler.h"
 #include "common/elf_info.h"
+#include "common/memory_patcher.h"
 #include "common/ntapi.h"
 #include "common/path_util.h"
 #include "common/polyfill_thread.h"
@@ -254,6 +254,14 @@ void Emulator::Run(const std::filesystem::path& file) {
 #endif
 
     std::exit(0);
+}
+
+void Emulator::Run(int& argc, char* argv[]) {
+    // Load config options from arguments
+    Config::loadArgs(argc, argv);
+    MemoryPatcher::patchFile = Config::getPatchFile();
+
+    this->Run(argv[1]);
 }
 
 void Emulator::LoadSystemModules(const std::filesystem::path& file) {

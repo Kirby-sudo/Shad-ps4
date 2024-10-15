@@ -13,6 +13,7 @@ enum HideCursorState : s16 { Never, Idle, Always };
 
 void load(const std::filesystem::path& path);
 void save(const std::filesystem::path& path);
+void loadArgs(int& argc, char* argv[]);
 
 bool isNeoMode();
 bool isFullscreenMode();
@@ -24,6 +25,8 @@ std::string getLogFilter();
 std::string getLogType();
 std::string getUserName();
 std::string getUpdateChannel();
+std::string getPatchFile();
+std::string getBackButtonBehavior();
 
 s16 getCursorState();
 int getCursorHideTimeout();
@@ -62,6 +65,8 @@ void setLanguage(u32 language);
 void setNeoMode(bool enable);
 void setUserName(const std::string& type);
 void setUpdateChannel(const std::string& type);
+void setPatchFile(const std::string& fileName);
+void setBackButtonBehavior(const std::string& type);
 
 void setCursorState(s16 cursorState);
 void setCursorHideTimeout(int newcursorHideTimeout);

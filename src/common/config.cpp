@@ -42,6 +42,7 @@ static std::string logFilter;
 static std::string logType = "async";
 static std::string userName = "shadPS4";
 static std::string updateChannel;
+static std::string patchFile = "";
 static std::string backButtonBehavior = "left";
 static bool useSpecialPad = false;
 static int specialPadClass = 1;
@@ -137,6 +138,10 @@ std::string getUserName() {
 
 std::string getUpdateChannel() {
     return updateChannel;
+}
+
+std::string getPatchFile() {
+    return patchFile;
 }
 
 std::string getBackButtonBehavior() {
@@ -305,6 +310,10 @@ void setUserName(const std::string& type) {
 
 void setUpdateChannel(const std::string& type) {
     updateChannel = type;
+}
+
+void setPatchFile(const std::string& fileName) {
+    patchFile = fileName;
 }
 
 void setBackButtonBehavior(const std::string& type) {
@@ -483,6 +492,7 @@ void load(const std::filesystem::path& path) {
         }
         isShowSplash = toml::find_or<bool>(general, "showSplash", true);
         isAutoUpdate = toml::find_or<bool>(general, "autoUpdate", false);
+        backButtonBehavior = toml::find_or<std::string>(general, "backButtonBehavior", "left");
     }
 
     if (data.contains("Input")) {
@@ -565,6 +575,18 @@ void load(const std::filesystem::path& path) {
         m_language = toml::find_or<int>(settings, "consoleLanguage", 1);
     }
 }
+
+void loadArgs(int& argc, char* argv[]) {
+    for (int i = 0; i < argc; i++) {
+        const std::string arg = argv[i];
+        if (arg == "-p") {
+            patchFile = argv[i + 1];
+        } else if (arg == "-f" || arg == "--fullscreen") {
+            isFullscreen = true;
+        }
+    }
+}
+
 void save(const std::filesystem::path& path) {
     toml::value data;
 
@@ -668,6 +690,7 @@ void setDefaultValues() {
     } else {
         updateChannel = "Nightly";
     }
+    patchFile = "";
     cursorState = HideCursorState::Idle;
     cursorHideTimeout = 5;
     backButtonBehavior = "left";
