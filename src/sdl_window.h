@@ -58,6 +58,10 @@ public:
         return is_open;
     }
 
+    bool isCapturingMouse() const {
+        return is_capturing_mouse;
+    }
+
     [[nodiscard]] SDL_Window* GetSdlWindow() const {
         return window;
     }
@@ -72,7 +76,7 @@ private:
     void onResize();
     void onKeyPress(const SDL_Event* event);
     void onGamepadEvent(const SDL_Event* event);
-
+    void onMouseAction(const SDL_Event* event);
     int sdlGamepadToOrbisButton(u8 button);
 
 private:
@@ -83,6 +87,8 @@ private:
     SDL_Window* window{};
     bool is_shown{};
     bool is_open{true};
+
+    bool is_capturing_mouse{false};
 };
 
 } // namespace Frontend

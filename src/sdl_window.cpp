@@ -17,6 +17,9 @@
 #ifdef __APPLE__
 #include <SDL3/SDL_metal.h>
 #endif
+#include <common/singleton.h>
+#include <core/libraries/mouse/mouse.h>
+#include <input/mouse.h>
 
 namespace Frontend {
 
@@ -114,11 +117,64 @@ void WindowSDL::waitEvent() {
     case SDL_EVENT_QUIT:
         is_open = false;
         break;
+
+    case SDL_EVENT_MOUSE_MOTION:
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
+    case SDL_EVENT_MOUSE_WHEEL:
+        onMouseAction(&event);
+        break;
     default:
         break;
     }
 }
+void WindowSDL::onMouseAction(const SDL_Event* event) {
+    auto& mouse = *Common::Singleton<Input::GameMouse>::Instance();
 
+    if (mouse.m_connected && !is_capturing_mouse) {
+        SDL_SetWindowRelativeMouseMode(window, true);
+        is_capturing_mouse = true;
+    } else if (!mouse.m_connected && is_capturing_mouse) {
+        SDL_SetWindowRelativeMouseMode(window, false);
+        is_capturing_mouse = false;
+    }
+
+    bool pressed_down = false;
+    switch (event->type) {
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        pressed_down = true;
+        [[fallthrough]];
+    case SDL_EVENT_MOUSE_BUTTON_UP: {
+        using Libraries::Mouse::OrbisMouseButtonDataOffset;
+
+        auto btn = event->button.button;
+        if (btn < 1 || btn > 5) { // 1..5 range
+            return;
+        }
+        constexpr static std::array sdl_to_orbis_buttons = {
+            static_cast<OrbisMouseButtonDataOffset>(0x00),
+            OrbisMouseButtonDataOffset::ORBIS_MOUSE_BUTTON_PRIMARY,
+            OrbisMouseButtonDataOffset::ORBIS_MOUSE_BUTTON_OPTIONAL,
+            OrbisMouseButtonDataOffset::ORBIS_MOUSE_BUTTON_SECONDARY,
+            OrbisMouseButtonDataOffset::ORBIS_MOUSE_BUTTON_OPTIONAL2,
+            OrbisMouseButtonDataOffset::ORBIS_MOUSE_BUTTON_OPTIONAL3,
+        };
+        mouse.CheckButton(sdl_to_orbis_buttons[btn], pressed_down);
+    } break;
+    case SDL_EVENT_MOUSE_MOTION: {
+        const auto x = static_cast<int>(event->motion.xrel * mouse.speed);
+        const auto y = static_cast<int>(event->motion.yrel * mouse.speed);
+        mouse.CheckMove(x, y);
+    } break;
+    case SDL_EVENT_MOUSE_WHEEL: {
+        const auto x = static_cast<int>(event->wheel.x);
+        const auto y = static_cast<int>(event->wheel.y);
+        mouse.CheckWheel(x, y);
+    } break;
+    default:
+        break;
+    }
+}
 void WindowSDL::onResize() {
     SDL_GetWindowSizeInPixels(window, &width, &height);
     ImGui::Core::OnResize();
